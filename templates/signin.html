@@ -1,0 +1,392 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء حساب</title><style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Tahoma,sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+overflow:hidden;
+background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
+}
+
+body::before,
+body::after{
+content:"";
+position:fixed;
+border-radius:50%;
+filter:blur(80px);
+animation:float 10s infinite alternate ease-in-out;
+pointer-events:none;
+}
+
+body::before{
+width:260px;
+height:260px;
+background:#06b6d4;
+top:-80px;
+right:-80px;
+opacity:.25;
+}
+
+body::after{
+width:300px;
+height:300px;
+background:#8b5cf6;
+bottom:-100px;
+left:-100px;
+opacity:.25;
+}
+
+@keyframes float{
+to{
+transform:translateY(40px) translateX(20px);
+}
+}
+
+.box{
+width:95%;
+max-width:430px;
+padding:28px;
+border-radius:24px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(10px);
+border:1px solid rgba(255,255,255,.12);
+box-shadow:
+0 10px 30px rgba(0,0,0,.3),
+0 0 30px rgba(139,92,246,.15);
+animation:appear .5s ease;
+}
+
+@keyframes appear{
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:none;
+}
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+font-size:28px;
+color:white;
+}
+
+.steps{
+display:flex;
+gap:8px;
+margin-bottom:20px;
+}
+
+.bar{
+height:6px;
+flex:1;
+border-radius:20px;
+background:rgba(255,255,255,.15);
+transition:.3s;
+}
+
+.bar.active{
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+}
+
+.step{
+display:none;
+}
+
+.step.active{
+display:block;
+animation:fade .4s ease;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(10px);
+}
+to{
+opacity:1;
+transform:none;
+}
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+label{
+display:block;
+margin-bottom:6px;
+font-size:13px;
+color:#cbd5e1;
+}
+
+input{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:rgba(255,255,255,.08);
+color:white;
+outline:none;
+transition:.3s;
+}
+
+input::placeholder{
+color:#94a3b8;
+}
+
+input:focus{
+background:rgba(255,255,255,.12);
+box-shadow:0 0 0 2px rgba(6,182,212,.4);
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
+color:white;
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+transition:.3s;
+}
+
+button:hover{
+transform:translateY(-2px);
+}
+
+button:disabled{
+opacity:.6;
+cursor:not-allowed;
+}
+
+#loading{
+display:none;
+text-align:center;
+margin-top:12px;
+font-weight:bold;
+color:#38bdf8;
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+50%{
+opacity:.4;
+}
+}
+
+#response{
+margin-top:15px;
+padding:12px;
+border-radius:12px;
+font-size:13px;
+word-break:break-word;
+display:none;
+}
+
+.tokenBox{
+margin-top:10px;
+padding:10px;
+border-radius:10px;
+background:rgba(255,255,255,.06);
+overflow-wrap:anywhere;
+}
+
+.success{
+background:rgba(16,185,129,.15);
+border:1px solid rgba(16,185,129,.4);
+color:#10b981;
+}
+
+.error{
+background:rgba(239,68,68,.15);
+border:1px solid rgba(239,68,68,.4);
+color:#ef4444;
+}
+</style></head>
+<body><div class="box"><h2>إنشاء حساب</h2><div class="steps">
+<div id="bar1" class="bar active"></div>
+<div id="bar2" class="bar"></div>
+</div><div id="step1" class="step active"><div class="input-group">
+<label>رقم الهاتف</label>
+<input
+id="phone"
+maxlength="8"
+placeholder="4xxxxxxx">
+</div><div class="input-group">
+<label>كلمة المرور</label>
+<input
+id="password"
+type="password"
+maxlength="4"
+placeholder="0000">
+</div><button id="sendBtn" onclick="startSignup()">
+إرسال رمز التحقق
+</button></div><div id="step2" class="step"><div class="input-group">
+<label>رمز OTP</label>
+<input
+id="otp"
+placeholder="أدخل الرمز">
+</div><button id="verifyBtn" onclick="verifySignup()">
+إتمام التسجيل
+</button></div><div id="loading">
+جاري المعالجة...
+</div><div id="response"></div></div><script>
+
+let savedPhone="";
+let savedPassword="";
+
+function showMessage(data){
+
+const box=document.getElementById("response");
+
+box.style.display="block";
+
+if(data.status==="success"){
+box.className="success";
+}else{
+box.className="error";
+}
+
+box.innerHTML="<b>"+(data.message || "تمت العملية")+"</b>";
+}
+
+async function startSignup(){
+
+savedPhone=phone.value.trim();
+savedPassword=password.value.trim();
+
+if(!/^4\d{7}$/.test(savedPhone)){
+showMessage({
+status:"error",
+message:"رقم الهاتف غير صالح"
+});
+return;
+}
+
+if(!/^\d{4}$/.test(savedPassword)){
+showMessage({
+status:"error",
+message:"كلمة المرور يجب أن تكون 4 أرقام"
+});
+return;
+}
+
+loading.style.display="block";
+sendBtn.disabled=true;
+
+try{
+
+const r=await fetch("/api/signup/start",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+phone:savedPhone,
+password:savedPassword
+})
+});
+
+const data=await r.json();
+
+showMessage(data);
+
+if(data.status==="success"){
+
+step1.classList.remove("active");
+step2.classList.add("active");
+
+bar2.classList.add("active");
+}
+
+}catch(e){
+
+showMessage({
+status:"error",
+message:e.message
+});
+
+}
+
+loading.style.display="none";
+sendBtn.disabled=false;
+}
+
+async function verifySignup(){
+
+loading.style.display="block";
+verifyBtn.disabled=true;
+
+try{
+
+const r=await fetch("/api/signup/verify",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+phone:savedPhone,
+password:savedPassword,
+otp:otp.value.trim()
+})
+});
+
+const data=await r.json();
+
+const box=document.getElementById("response");
+
+if(data.status==="success"){
+
+box.style.display="block";
+box.className="success";
+
+box.innerHTML=
+"<b>"+data.message+"</b>" +
+
+"<div class='tokenBox'>" +
+"<b>Token</b><br>" +
+data.token +
+"</div>" +
+
+"<div class='tokenBox'>" +
+"<b>Expiry</b><br>" +
+data.expiry +
+"</div>";
+
+}else{
+
+showMessage(data);
+
+}
+
+}catch(e){
+
+showMessage({
+status:"error",
+message:e.message
+});
+
+}
+
+loading.style.display="none";
+verifyBtn.disabled=false;
+}
+</script></body>
+</html>
