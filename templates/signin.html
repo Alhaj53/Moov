@@ -54,6 +54,7 @@ transform:translateY(40px) translateX(20px);
 }
 
 .box{
+position:relative;
 width:95%;
 max-width:430px;
 padding:28px;
@@ -234,7 +235,11 @@ backdrop-filter:blur(10px);
 transition:.3s;
 }
 </style></head>
-<body><div class="box"><h2>مرحبا!</h2><div class="steps">
+<body><div class="box">
+
+<button id="backArrow" onclick="backToSignup()" style="display:none;position:absolute;top:15px;right:15px;width:40px;height:40px;border:none;border-radius:50%;background:rgba(255,255,255,.08);color:white;font-size:22px;cursor:pointer;">
+←
+</button><h2>مرحبا!</h2><div class="steps">
 <div id="bar1" class="bar active"></div>
 <div id="bar2" class="bar"></div>
 </div><div id="step1" class="step active"><div class="input-group">
@@ -332,6 +337,7 @@ step1.classList.remove("active");
 step2.classList.add("active");
 
 bar2.classList.add("active");
+backArrow.style.display="block";
 }
 
 }catch(e){
@@ -406,7 +412,16 @@ message:e.message
 loading.style.display="none";
 verifyBtn.disabled=false;
 }
+function backToSignup(){
 
+step2.classList.remove("active");
+step1.classList.add("active");
+
+bar2.classList.remove("active");
+
+backArrow.style.display="none";
+
+    }
 function goToLogin(){
     // سنضع رابط صفحة تسجيل الدخول هنا لاحقاً
 }
