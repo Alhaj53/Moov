@@ -219,6 +219,20 @@ background:rgba(239,68,68,.15);
 border:1px solid rgba(239,68,68,.4);
 color:#ef4444;
 }
+#loginBtn{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
+color:white;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(10px);
+transition:.3s;
+}
 </style></head>
 <body><div class="box"><h2>إنشاء حساب</h2><div class="steps">
 <div id="bar1" class="bar active"></div>
@@ -238,6 +252,10 @@ maxlength="4"
 placeholder="0000">
 </div><button id="sendBtn" onclick="startSignup()">
 إرسال رمز التحقق
+</button>
+
+<button id="loginBtn" onclick="goToLogin()">
+تسجيل الدخول
 </button></div><div id="step2" class="step"><div class="input-group">
 <label>رمز OTP</label>
 <input
@@ -388,5 +406,10 @@ message:e.message
 loading.style.display="none";
 verifyBtn.disabled=false;
 }
+
+function goToLogin(){
+    // سنضع رابط صفحة تسجيل الدخول هنا لاحقاً
+}
+
 </script></body>
 </html>
