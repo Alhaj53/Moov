@@ -85,7 +85,7 @@ async def signup_start():
     if existing:
         return jsonify({
             "status": "error",
-            "message": "هذا الرقم مسجل مسبقاً"
+            "message": "هذا الرقم مسجل مسبقاً يرجى تسجيل الدخول"
         }), 409
 
     payload = {
@@ -110,7 +110,7 @@ async def signup_start():
 
     return jsonify({
         "status": "success",
-        "message": "تم إرسال رمز التحقق OTP"
+        "message": "ادخل رمز OTP الذي وصلك عبر SMS"
     })
 
 # =========================
@@ -155,7 +155,7 @@ async def signup_verify():
     username = "مستخدم"
 
     if isinstance(resp, dict):
-        username = resp.get("nomPrenom", "مستخدم")
+        username = resp.get("nomPrenom", "مجهول")
 
         parts = username.split()
         if len(parts) >= 2:
