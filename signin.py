@@ -34,8 +34,8 @@ def validate_phone(phone):
 def validate_password(password):
     return re.fullmatch(r"\d{4}", password) is not None
 
-def generate_token():
-    return secrets.token_hex(32)
+def generate_token(phone):
+    return f"{phone}_{secrets.token_hex(32)}"
 
 def token_expiry():
     return (datetime.utcnow() + timedelta(days=30)).isoformat()
@@ -138,7 +138,7 @@ async def signup_verify():
         username = resp.get("name", "مستخدم")
 
     # إنشاء توكن
-    token = generate_token()
+    token = generate_token(phone)
     expiry = token_expiry()
 
     firebase_data = {
