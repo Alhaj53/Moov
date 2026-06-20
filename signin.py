@@ -187,9 +187,8 @@ async def signup_verify():
 
     return jsonify({
         "status": "success",
-        "message": f"تم إنشاء الحساب بنجاح، مرحباً {username}",
-        "token": token,
-        "created_at": account_created_at
+        "message": f"تم إنشاء الحساب بنجاح، مرحباً {username}"
+
     })
 
 # =========================
