@@ -378,21 +378,12 @@ const box=document.getElementById("response");
 
 if(data.status==="success"){
 
-box.style.display="block";
-box.className="success";
+    box.style.display="block";
+    box.className="success";
 
-box.innerHTML=
-"<b>"+data.message+"</b>" +
-
-"<div class='tokenBox'>" +
-"<b>Token</b><br>" +
-data.token +
-"</div>" +
-
-"<div class='tokenBox'>" +
-"<b>Expiry</b><br>" +
-data.expiry +
-"</div>";
+    box.innerHTML =
+        "<b>" + data.message + "</b>";
+}
 
 }else{
 
