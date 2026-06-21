@@ -213,7 +213,9 @@ color:white;
 </div>
 
 <div class="actions">
-<button class="actionBtn" id="balanceBtn">معرفة الرصيد</button>
+<button class="actionBtn" id="balanceBtn" onclick="getBalance()">
+معرفة الرصيد
+</button>
 <button class="actionBtn" id="nameBtn">معرفة الاسم المسجل</button>
 </div>
 
@@ -263,7 +265,124 @@ loadDashboard();
 window.addEventListener("load",()=>{
 document.getElementById("phone").focus();
 });
-</script>
+async function getBalance(){
 
+const token = localStorage.getItem("token");
+const phone = document.getElementById("phone").value.trim();
+
+if(!phone){
+alert("أدخل رقم الهاتف");
+return;
+}
+
+try{
+
+const r = await fetch("/balance",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+phone: phone,
+token: token
+})
+});
+
+const data = await r.json();
+
+if(data.status !== "success"){
+alert(data.error || "فشل العملية");
+return;
+}
+
+// تحديث النقاط
+if(data.points !== undefined){
+document.getElementById("points").innerText = data.points;
+}
+
+// بناء الرصيد
+let html = "";
+
+data.result.forEach(item=>{
+html += `
+<div style="
+background:rgba(255,255,255,0.06);
+padding:10px;
+margin-bottom:8px;
+border-radius:10px;
+">
+${item}
+</div>`;
+});
+
+// عرض النافذة
+document.getElementById("balanceResult").innerHTML = html;
+document.getElementById("balanceModal").style.display = "flex";
+
+}catch(e){
+alert("خطأ في الاتصال");
+}
+}
+
+function closeBalance(){
+document.getElementById("balanceModal").style.display="none";
+}
+</script>
+<div id="balanceModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.75);
+backdrop-filter:blur(6px);
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div style="
+width:92%;
+max-width:520px;
+background:#0f172a;
+border:1px solid rgba(255,255,255,0.15);
+border-radius:18px;
+padding:20px;
+color:white;
+box-shadow:0 20px 60px rgba(0,0,0,0.6);
+">
+
+<h3 style="
+text-align:center;
+margin-bottom:15px;
+color:#06b6d4;
+font-size:20px;
+">
+تفاصيل الرصيد
+</h3>
+
+<div id="balanceResult" style="
+max-height:350px;
+overflow:auto;
+font-size:15px;
+line-height:1.8;
+text-align:right;
+"></div>
+
+<button onclick="closeBalance()" style="
+width:100%;
+margin-top:15px;
+padding:14px;
+border:none;
+border-radius:12px;
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+color:white;
+font-size:16px;
+cursor:pointer;
+font-weight:bold;
+">
+إغلاق
+</button>
+
+</div>
+</div>
 </body>
 </html>
