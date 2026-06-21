@@ -325,6 +325,11 @@ async def token_login():
         "message": f"مرحباً {user.get('username', 'مستخدم')}",
         "user": user
     }), 200    
+
+
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")    
 # =========================
 # تشغيل السيرفر
 # =========================
