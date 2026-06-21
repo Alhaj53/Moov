@@ -216,7 +216,9 @@ color:white;
 <button class="actionBtn" id="balanceBtn" onclick="getBalance()">
 <span id="balanceText">معرفة الرصيد</span>
 </button>
-<button class="actionBtn" id="nameBtn">معرفة الاسم المسجل</button>
+<button class="actionBtn" id="nameBtn" onclick="getName()">
+معرفة الاسم المسجل
+</button>
 </div>
 
 <div class="notice">
@@ -345,6 +347,57 @@ text.innerHTML = "معرفة الرصيد";
 
 function closeBalance(){
 document.getElementById("balanceModal").style.display="none";
+}
+
+async function getName(){
+
+const token = localStorage.getItem("token");
+const phone = document.getElementById("phone").value.trim();
+
+if(!phone){
+alert("أدخل رقم الهاتف");
+return;
+}
+
+try{
+
+const r = await fetch("/name", {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify({
+phone: phone,
+token: token
+})
+});
+
+const data = await r.json();
+
+if(data.status !== "success"){
+alert(data.error || "فشل العملية");
+return;
+}
+
+document.getElementById("balanceResult").innerHTML = `
+<div style="
+background:rgba(255,255,255,0.06);
+padding:12px;
+border-radius:10px;
+font-size:18px;
+text-align:center;
+">
+${data.name}
+</div>
+`;
+
+document.getElementById("points").innerText = data.points;
+document.getElementById("balanceModal").style.display = "flex";
+
+}catch(e){
+alert("خطأ في الاتصال");
+}
+
 }
 </script>
 <div id="balanceModal" style="
