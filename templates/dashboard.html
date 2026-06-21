@@ -284,5 +284,43 @@ color:white;
 
 </div>
 
+<script>
+async function loadDashboard() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        window.location.href = "/";
+        return;
+    }
+
+    const r = await fetch("/api/token-login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ token })
+    });
+
+    const data = await r.json();
+
+    if (data.status === "success") {
+
+        const user = data.user;
+
+        document.getElementById("username").innerText = user.username;
+        document.getElementById("points").innerText = user.points;
+
+        document.querySelector(".avatar").innerText = user.username.charAt(0);
+
+    } else {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+    }
+}
+
+loadDashboard();
+</script>
+    
 </body>
 </html>
