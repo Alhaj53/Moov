@@ -354,7 +354,9 @@ async def get_balance():
     user = r.json()
 
     if not user:
-        return jsonify({"error": "user not found"}), 404
+        user = {
+        "points": 0
+    }
 
     if user.get("token") != token:
         return jsonify({"error": "invalid token"}), 401
