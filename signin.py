@@ -473,6 +473,115 @@ async def get_balance():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@app.route("/name", methods=["POST"])
+async def get_name():
+
+    data = request.json or {}
+
+    phone_number = data.get("phone")
+    token = data.get("token")
+
+    if not phone_number or not token:
+        return jsonify({"error": "missing data"}), 400
+
+    # التحقق من التوكن
+    try:
+        owner_phone = token.split("_")[0]
+    except:
+        return jsonify({"error": "invalid token"}), 401
+
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"{firebase_url}/{owner_phone}.json")
+
+    user = r.json()
+
+    if not user or user.get("token") != token:
+        return jsonify({"error": "invalid token"}), 401
+
+    points = int(user.get("points", 0))
+
+    if points <= 0:
+        return jsonify({"error": "no points"}), 403
+
+    # خصم نقطة
+    user["points"] = points - 1
+
+    async with httpx.AsyncClient() as client:
+        await client.put(
+            f"{firebase_url}/{owner_phone}.json",
+            json=user
+        )
+
+    # إرسال OTP
+    signup_payload = {
+        "phone": phone_number
+    }
+
+    signup_headers = {
+        "User-Agent": "Dart/3.5 (dart:io)",
+        "Accept": "application/json; charset=UTF-8",
+        "Content-Type": "application/json",
+        "lang": "fr"
+    }
+
+    try:
+
+        async with httpx.AsyncClient(timeout=10) as client:
+
+            signup_response = await client.post(
+                signup_url,
+                json=signup_payload,
+                headers=signup_headers
+            )
+
+        otp = signup_response.text.strip()
+
+        if not otp:
+            return jsonify({
+                "error": "otp not found"
+            }), 500
+
+        signin_payload = {
+            "phoneNo": phone_number,
+            "otp": otp
+        }
+
+        async with httpx.AsyncClient(timeout=10) as client:
+
+            signin_response = await client.post(
+                signin_url,
+                json=signin_payload,
+                headers=signup_headers
+            )
+
+        if signin_response.status_code != 200:
+            return jsonify({
+                "error": "failed to get name"
+            }), 500
+
+        response_data = signin_response.json()
+
+        name = response_data.get(
+            "nomPrenom",
+            "غير معروف"
+        )
+
+        parts = name.split()
+
+        if len(parts) >= 2:
+            name = " ".join(reversed(parts))
+
+        return jsonify({
+            "status": "success",
+            "points": user["points"],
+            "name": name
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
 if __name__ == "__main__":
     import os
     app.run(
