@@ -117,7 +117,9 @@ async def login():
         "username": username,
         "token": token
     }), 200
-
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
 # =========================
 # تشغيل السيرفر
 # =========================
