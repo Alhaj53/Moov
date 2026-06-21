@@ -186,10 +186,11 @@ async def signup_verify():
         )
 
     return jsonify({
-        "status": "success",
-        "message": f"تم إنشاء الحساب بنجاح، مرحباً {username}"
-
-    })
+    "status": "success",
+    "message": f"تم إنشاء الحساب بنجاح، مرحباً {username}",
+    "username": username,
+    "token": token
+})
 @app.route("/api/login", methods=["POST"])
 async def login():
 
