@@ -317,6 +317,9 @@ async def token_login():
             "message": "التوكن غير صحيح"
         }), 401
 
+    user.pop("password", None)
+        
+
     return jsonify({
         "status": "success",
         "message": f"مرحباً {user.get('username', 'مستخدم')}",
