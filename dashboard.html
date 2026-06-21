@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Tahoma,sans-serif;
+}
+
+body{
+min-height:100vh;
+padding:20px;
+background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+body::before,
+body::after{
+content:"";
+position:fixed;
+border-radius:50%;
+filter:blur(80px);
+pointer-events:none;
+}
+
+body::before{
+width:260px;
+height:260px;
+background:#06b6d4;
+top:-80px;
+right:-80px;
+opacity:.25;
+}
+
+body::after{
+width:300px;
+height:300px;
+background:#8b5cf6;
+bottom:-100px;
+left:-100px;
+opacity:.25;
+}
+
+.box{
+width:100%;
+max-width:500px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(10px);
+border:1px solid rgba(255,255,255,.12);
+border-radius:25px;
+padding:25px;
+box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+
+.userBox{
+display:flex;
+align-items:center;
+gap:12px;
+margin-bottom:25px;
+}
+
+.avatar{
+width:55px;
+height:55px;
+border-radius:50%;
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+font-weight:bold;
+color:white;
+}
+
+.userInfo{
+color:white;
+}
+
+.userInfo h3{
+font-size:18px;
+margin-bottom:3px;
+}
+
+.userInfo p{
+font-size:13px;
+color:#cbd5e1;
+}
+
+.pointsCard{
+text-align:center;
+padding:25px;
+border-radius:20px;
+background:rgba(255,255,255,.06);
+margin-bottom:20px;
+}
+
+.pointsLabel{
+color:#cbd5e1;
+font-size:14px;
+margin-bottom:10px;
+}
+
+.points{
+font-size:50px;
+font-weight:bold;
+color:white;
+}
+
+.rechargeBtn{
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+font-weight:bold;
+cursor:pointer;
+color:white;
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+margin-top:15px;
+}
+
+.offers{
+margin-top:15px;
+display:grid;
+gap:10px;
+}
+
+.offer{
+background:rgba(255,255,255,.05);
+padding:12px;
+border-radius:12px;
+color:white;
+text-align:center;
+}
+
+.sectionTitle{
+margin:25px 0 15px;
+color:white;
+font-size:18px;
+font-weight:bold;
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+label{
+display:block;
+margin-bottom:6px;
+color:#cbd5e1;
+font-size:13px;
+}
+
+input{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:rgba(255,255,255,.08);
+color:white;
+outline:none;
+}
+
+input::placeholder{
+color:#94a3b8;
+}
+
+.actions{
+display:grid;
+gap:10px;
+margin-top:15px;
+}
+
+.actionBtn{
+padding:14px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+color:white;
+background:linear-gradient(90deg,#06b6d4,#8b5cf6);
+}
+
+.notice{
+margin-top:15px;
+padding:12px;
+border-radius:12px;
+background:rgba(250,204,21,.12);
+border:1px solid rgba(250,204,21,.3);
+color:#fde68a;
+font-size:13px;
+text-align:center;
+}
+
+#response{
+margin-top:15px;
+display:none;
+padding:12px;
+border-radius:12px;
+background:rgba(255,255,255,.08);
+color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <div class="userBox">
+        <div class="avatar">م</div>
+
+        <div class="userInfo">
+            <h3 id="username">اسم المستخدم</h3>
+            <p>الحساب الأساسي</p>
+        </div>
+    </div>
+
+    <div class="pointsCard">
+        <div class="pointsLabel">رصيد النقاط</div>
+
+        <div class="points" id="points">
+            0
+        </div>
+
+        <button class="rechargeBtn">
+            إعادة شحن النقاط
+        </button>
+
+        <div class="offers">
+
+            <div class="offer">
+                30 نقطة مقابل 5 MRU
+            </div>
+
+            <div class="offer">
+                50 نقطة مقابل 10 MRU
+            </div>
+
+            <div class="offer">
+                300 نقطة مقابل 20 MRU
+            </div>
+
+        </div>
+    </div>
+
+    <div class="sectionTitle">
+        خدمات الأرقام
+    </div>
+
+    <div class="input-group">
+        <label>رقم الهاتف</label>
+
+        <input
+            id="phone"
+            maxlength="8"
+            placeholder="4xxxxxxx">
+    </div>
+
+    <div class="actions">
+
+        <button class="actionBtn" id="balanceBtn">
+            معرفة الرصيد
+        </button>
+
+        <button class="actionBtn" id="nameBtn">
+            معرفة الاسم المسجل
+        </button>
+
+    </div>
+
+    <div class="notice">
+        سيتم خصم نقطة واحدة من رصيدك مقابل كل عملية استخدام لأي خدمة.
+    </div>
+
+    <div id="response"></div>
+
+</div>
+
+</body>
+  </html>
