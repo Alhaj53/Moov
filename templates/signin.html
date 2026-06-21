@@ -412,8 +412,69 @@ bar2.classList.remove("active");
 backArrow.style.display="none";
 
     }
-function goToLogin(){
-    // سنضع رابط صفحة تسجيل الدخول هنا لاحقاً
+async function goToLogin(){
+
+const phone = document.getElementById("phone").value.trim();
+const password = document.getElementById("password").value.trim();
+
+if(!/^4\d{7}$/.test(phone)){
+    showMessage({
+        status:"error",
+        message:"رقم الهاتف غير صالح"
+    });
+    return;
+}
+
+if(!/^\d{4}$/.test(password)){
+    showMessage({
+        status:"error",
+        message:"كلمة المرور يجب أن تكون 4 أرقام"
+    });
+    return;
+}
+
+loading.style.display="block";
+loginBtn.disabled=true;
+
+try{
+
+    const r = await fetch("/api/login",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            phone:phone,
+            password:password
+        })
+    });
+
+    const data = await r.json();
+
+    showMessage(data);
+
+    if(data.status==="success"){
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("username", data.username);
+
+        // التحويل للصفحة الرئيسية لاحقاً
+        // window.location.href = "/dashboard";
+
+    }
+
+}catch(e){
+
+    showMessage({
+        status:"error",
+        message:"فشل الاتصال بالخادم"
+    });
+
+}
+
+loading.style.display="none";
+loginBtn.disabled=false;
+
 }
 
 </script></body>
