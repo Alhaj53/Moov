@@ -261,6 +261,11 @@ placeholder="مثال: 0000">
 
 <button id="loginBtn" onclick="goToLogin()">
 تسجيل الدخول
+</button><button onclick="getBalance()" style="
+margin-top:10px;
+background:rgba(255,255,255,.08);
+">
+معرفة الرصيد
 </button></div><div id="step2" class="step"><div class="input-group">
 <label>رمز OTP</label>
 <input
@@ -483,6 +488,130 @@ loading.style.display="none";
 loginBtn.disabled=false;
 
 }
+async function getBalance(){
 
-</script></body>
+const token = localStorage.getItem("token");
+
+const phone = document.getElementById("phone").value.trim();
+
+if(!phone){
+showMessage({
+status:"error",
+message:"أدخل رقم الهاتف"
+});
+return;
+}
+
+loading.style.display="block";
+
+try{
+
+const r = await fetch("/balance",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+phone: phone,
+token: token
+})
+});
+
+const data = await r.json();
+
+if(data.status === "success"){
+
+// تحديث النقاط
+if(data.points !== undefined){
+showMessage({
+    status: "success",
+    message: "تم خصم نقطة، نقاطك الآن: " + data.points
+});
+}
+
+// عرض الرصيد
+let html = "";
+
+data.result.forEach(item=>{
+html += "<div style='margin:5px 0'>"+item+"</div>";
+});
+
+const resultBox = document.getElementById("balanceResult");
+const modal = document.getElementById("glassModal");
+
+if (resultBox && modal) {
+    resultBox.innerHTML = html;
+    modal.style.display = "flex";
+}
+
+}else{
+
+showMessage({
+status:"error",
+message:data.error || "فشل العملية"
+});
+
+}
+
+}catch(e){
+
+showMessage({
+status:"error",
+message:"خطأ في الاتصال"
+});
+
+}
+
+loading.style.display="none";
+}
+
+function closeGlass(){
+document.getElementById("glassModal").style.display="none";
+}
+</script><div id="glassModal" style="
+display:none;
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,.4);
+backdrop-filter:blur(8px);
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div style="
+width:90%;
+max-width:420px;
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.2);
+border-radius:20px;
+padding:20px;
+color:white;
+">
+
+<h3 style="margin-bottom:10px;">تفاصيل الرصيد</h3>
+
+<div id="balanceResult" style="
+max-height:300px;
+overflow:auto;
+text-align:right;
+font-size:14px;
+"></div>
+
+<button onclick="closeGlass()" style="
+width:100%;
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#06b6d4;
+color:white;
+cursor:pointer;
+">
+إغلاق
+</button>
+
+</div>
+</div></body>
 </html>
