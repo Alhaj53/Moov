@@ -339,7 +339,7 @@ async def get_balance():
         return jsonify({"error": "missing data"}), 400
 
     # =========================
-    # 1. استخراج صاحب التوكن فقط
+    # 1. فقط التحقق من صاحب التوكن (للنقاط)
     # =========================
     try:
         owner_phone = token.split("_")[0]
@@ -351,10 +351,7 @@ async def get_balance():
 
     user = r.json()
 
-    if not user:
-        return jsonify({"error": "invalid token"}), 401
-
-    if user.get("token") != token:
+    if not user or user.get("token") != token:
         return jsonify({"error": "invalid token"}), 401
 
     points = int(user.get("points", 0))
@@ -369,7 +366,7 @@ async def get_balance():
         await client.put(f"{firebase_url}/{owner_phone}.json", json=user)
 
     # =========================
-    # 2. طلب الرصيد (بدون أي علاقة بالفايربيس)
+    # 2. طلب الرصيد (الرقم المدخل مستقل تماماً)
     # =========================
     url = "http://ec2-18-210-103-52.compute-1.amazonaws.com/mymoovbemobile/mainApp/moov-interface/line"
 
@@ -392,15 +389,13 @@ async def get_balance():
 
         if response.status_code != 200:
             return jsonify({
-                "error": "request failed",
-                "status": response.status_code
+                "status": "error",
+                "message": "request failed",
+                "status_code": response.status_code
             }), 500
 
         data = response.json()
 
-        # =========================
-        # 3. معالجة الرصيد (نفس منطقك)
-        # =========================
         sold = float(data.get("sold", 0))
         balances = data.get("balances", [])
 
@@ -438,11 +433,6 @@ async def get_balance():
             except:
                 return date_str
 
-        minutes_list = []
-        sms_list = []
-        internet_list = []
-        bonus_list = []
-
         for bal in balances:
             for d in bal.get("details", []):
 
@@ -453,12 +443,12 @@ async def get_balance():
                 if unit == "sec":
                     minutes = int(balance) // 60
                     if minutes > 0:
-                        minutes_list.append(f"{minutes} min GRATIPLUS ({expire})")
+                        result.append(f"{minutes} min GRATIPLUS ({expire})")
 
                 elif unit == "SMS":
                     sms = int(balance)
                     if sms > 0:
-                        sms_list.append(f"{sms} SMS ({expire})")
+                        result.append(f"{sms} SMS ({expire})")
 
                 elif unit == "b":
 
@@ -469,14 +459,9 @@ async def get_balance():
                     initial = int(d.get("initialAmount", 0))
 
                     if initial > 30 * 1024 ** 3:
-                        internet_list.append(f"{size} INTERNET ({expire})")
+                        result.append(f"{size} INTERNET ({expire})")
                     else:
-                        bonus_list.append(f"{size} BONUS INTERNET ({expire})")
-
-        result.extend(minutes_list)
-        result.extend(sms_list)
-        result.extend(internet_list)
-        result.extend(bonus_list)
+                        result.append(f"{size} BONUS INTERNET ({expire})")
 
         return jsonify({
             "status": "success",
