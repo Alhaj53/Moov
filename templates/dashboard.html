@@ -214,7 +214,7 @@ color:white;
 
 <div class="actions">
 <button class="actionBtn" id="balanceBtn" onclick="getBalance()">
-معرفة الرصيد
+<span id="balanceText">معرفة الرصيد</span>
 </button>
 <button class="actionBtn" id="nameBtn">معرفة الاسم المسجل</button>
 </div>
@@ -267,11 +267,19 @@ document.getElementById("phone").focus();
 });
 async function getBalance(){
 
+const btn = document.getElementById("balanceBtn");
+const text = document.getElementById("balanceText");
+
+btn.disabled = true;
+text.innerHTML = "جاري التحميل ⏳";
+
 const token = localStorage.getItem("token");
 const phone = document.getElementById("phone").value.trim();
 
 if(!phone){
 alert("أدخل رقم الهاتف");
+btn.disabled = false;
+text.innerHTML = "معرفة الرصيد";
 return;
 }
 
@@ -300,27 +308,38 @@ if(data.points !== undefined){
 document.getElementById("points").innerText = data.points;
 }
 
-// بناء الرصيد
+// عرض الرصيد
 let html = "";
 
-data.result.forEach(item=>{
+data.result.forEach(item => {
+
+item = item
+.replace(/\s+/g, ' ')
+.replace(/(\d+)\s+GB/, '$1GB')
+.replace(/(\d+)\s+MB/, '$1MB')
+.replace(/(\d+)\s+KB/, '$1KB');
+
 html += `
 <div style="
 background:rgba(255,255,255,0.06);
 padding:10px;
 margin-bottom:8px;
 border-radius:10px;
+font-size:14px;
+line-height:1.6;
 ">
 ${item}
 </div>`;
 });
 
-// عرض النافذة
 document.getElementById("balanceResult").innerHTML = html;
 document.getElementById("balanceModal").style.display = "flex";
 
 }catch(e){
 alert("خطأ في الاتصال");
+}finally{
+btn.disabled = false;
+text.innerHTML = "معرفة الرصيد";
 }
 }
 
