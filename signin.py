@@ -134,7 +134,7 @@ async def signup_verify():
         "phoneNo": phone,
         "otp": otp
     }
-
+    
     async with httpx.AsyncClient(verify=True) as client:
         status, resp = await fetch_json(
             client,
@@ -190,7 +190,71 @@ async def signup_verify():
         "message": f"تم إنشاء الحساب بنجاح، مرحباً {username}"
 
     })
+@app.route("/api/login", methods=["POST"])
+async def login():
 
+    data = request.json or {}
+
+    phone = str(data.get("phone", "")).strip()
+    password = str(data.get("password", "")).strip()
+
+    if not phone:
+        return jsonify({
+            "status": "error",
+            "message": "يرجى إدخال رقم الهاتف"
+        }), 400
+
+    if not password:
+        return jsonify({
+            "status": "error",
+            "message": "يرجى إدخال كلمة المرور"
+        }), 400
+
+    if not validate_phone(phone):
+        return jsonify({
+            "status": "error",
+            "message": "رقم الهاتف غير صالح"
+        }), 400
+
+    if not validate_password(password):
+        return jsonify({
+            "status": "error",
+            "message": "كلمة المرور غير صالحة"
+        }), 400
+
+    async with httpx.AsyncClient(verify=True) as client:
+
+        response = await client.get(
+            f"{firebase_url}/{phone}.json"
+        )
+
+    if response.status_code != 200:
+        return jsonify({
+            "status": "error",
+            "message": "تعذر الاتصال بقاعدة البيانات"
+        }), 500
+
+    user = response.json()
+
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "رقم الهاتف غير مسجل"
+        }), 404
+
+    if str(user.get("password", "")) != password:
+        return jsonify({
+            "status": "error",
+            "message": "كلمة المرور غير صحيحة"
+        }), 401
+
+    return jsonify({
+        "status": "success",
+        "message": f"مرحباً {user.get('username', 'مستخدم')}",
+        "username": user.get("username"),
+        "token": user.get("token")
+    }), 200
+    
 # =========================
 # تشغيل السيرفر
 # =========================
