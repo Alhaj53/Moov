@@ -351,24 +351,33 @@ document.getElementById("balanceModal").style.display="none";
 
 async function getName(){
 
+const btn = document.getElementById("nameBtn");
+
+const oldText = btn.innerHTML;
+
+btn.disabled = true;
+btn.innerHTML = "جاري التحميل ⏳";
+
 const token = localStorage.getItem("token");
 const phone = document.getElementById("phone").value.trim();
 
 if(!phone){
 alert("أدخل رقم الهاتف");
+btn.disabled = false;
+btn.innerHTML = oldText;
 return;
 }
 
 try{
 
-const r = await fetch("/name", {
-method: "POST",
-headers: {
-"Content-Type": "application/json"
+const r = await fetch("/name",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
 },
-body: JSON.stringify({
-phone: phone,
-token: token
+body:JSON.stringify({
+phone:phone,
+token:token
 })
 });
 
@@ -379,24 +388,37 @@ alert(data.error || "فشل العملية");
 return;
 }
 
+document.getElementById("modalTitle").innerText = "الاسم المسجل";
+
 document.getElementById("balanceResult").innerHTML = `
 <div style="
-background:rgba(255,255,255,0.06);
-padding:12px;
-border-radius:10px;
+background:rgba(255,255,255,.06);
+padding:15px;
+border-radius:12px;
 font-size:18px;
 text-align:center;
+font-weight:bold;
 ">
 ${data.name}
 </div>
 `;
 
 document.getElementById("points").innerText = data.points;
+
 document.getElementById("balanceModal").style.display = "flex";
 
 }catch(e){
+
 alert("خطأ في الاتصال");
+
+}finally{
+
+btn.disabled = false;
+btn.innerHTML = oldText;
+
 }
+
+  }
 
 }
 </script>
