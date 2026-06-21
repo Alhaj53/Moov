@@ -333,9 +333,161 @@ def dashboard():
 # =========================
 # تشغيل السيرفر
 # =========================
+
+@app.route("/balance", methods=["POST"])
+async def get_balance():
+
+    data = request.json or {}
+
+    phone_number = data.get("phone")
+    token = data.get("token")
+
+    if not phone_number or not token:
+        return jsonify({"error": "missing data"}), 400
+
+    # =========================
+    # 1. التحقق من المستخدم
+    # =========================
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"{firebase_url}/{phone_number}.json")
+
+    user = r.json()
+
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+
+    if user.get("token") != token:
+        return jsonify({"error": "invalid token"}), 401
+
+    points = int(user.get("points", 0))
+
+    if points <= 0:
+        return jsonify({"error": "no points"}), 403
+
+    # خصم نقطة
+    user["points"] = points - 1
+
+    async with httpx.AsyncClient() as client:
+        await client.put(f"{firebase_url}/{phone_number}.json", json=user)
+
+    # =========================
+    # 2. طلب الرصيد (نفس سكريبتك الأصلي)
+    # =========================
+    url = "http://ec2-18-210-103-52.compute-1.amazonaws.com/mymoovbemobile/mainApp/moov-interface/line"
+
+    params = {
+        "z": "0",
+        "phoneNumber": phone_number
+    }
+
+    headers = {
+        "User-Agent": "Dart/3.5 (dart:io)",
+        "Accept": "application/json; charset=UTF-8",
+        "Accept-Encoding": "gzip",
+        "mmauth": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTQ0NCIsImp0aSI6IjEiLCJyb2xlcyI6W3siYXV0aG9yaXR5IjoiTU9CX0NMSUVOVCJ9XSwiZG9taW5zIjpbXSwi...": "..."
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, params=params, headers=headers)
+
+        if response.status_code != 200:
+            return jsonify({
+                "error": "request failed",
+                "status": response.status_code
+            }), 500
+
+        data = response.json()
+
+        # =========================
+        # 3. نفس منطقك القديم 100%
+        # =========================
+        sold = float(data.get("sold", 0))
+        balances = data.get("balances", [])
+
+        result = [f"PRINCIPAL: {sold:.2f} UM"]
+
+        minutes_list = []
+        sms_list = []
+        internet_list = []
+        bonus_list = []
+
+        def format_data(bytes_value):
+            bytes_value = int(bytes_value)
+            gb = bytes_value // (1024 ** 3)
+            bytes_value %= (1024 ** 3)
+            mb = bytes_value // (1024 ** 2)
+            bytes_value %= (1024 ** 2)
+            kb = bytes_value // 1024
+
+            parts = []
+            if gb:
+                parts.append(f"{gb} GB")
+            if mb:
+                parts.append(f"{mb} MB")
+            if kb:
+                parts.append(f"{kb} KB")
+
+            return " ".join(parts) if parts else "0 KB"
+
+        def format_date(date_str):
+            if not date_str:
+                return ""
+            try:
+                date_part = date_str[:10]
+                time_part = date_str[11:16]
+                y, m, d = date_part.split("-")
+                return f"{d}/{m}/{y} {time_part}"
+            except:
+                return date_str
+
+        for bal in balances:
+            for d in bal.get("details", []):
+
+                unit = d.get("unit", "")
+                balance = d.get("balance", "0")
+                expire = format_date(d.get("expireTime", ""))
+
+                if unit == "sec":
+                    minutes = int(balance) // 60
+                    if minutes > 0:
+                        minutes_list.append(f"{minutes} min GRATIPLUS ({expire})")
+
+                elif unit == "SMS":
+                    sms = int(balance)
+                    if sms > 0:
+                        sms_list.append(f"{sms} Item SMS ({expire})")
+
+                elif unit == "b":
+
+                    if int(balance) == 0:
+                        continue
+
+                    size = format_data(balance)
+                    initial = int(d.get("initialAmount", 0))
+
+                    if initial > 30 * 1024 ** 3:
+                        internet_list.append(f"{size} INTERNET ({expire})")
+                    else:
+                        bonus_list.append(f"{size} BONUS INTERNET ({expire})")
+
+        result.extend(minutes_list)
+        result.extend(sms_list)
+        result.extend(internet_list)
+        result.extend(bonus_list)
+
+        return jsonify({
+            "status": "success",
+            "points": user["points"],
+            "result": result
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=5000,
         debug=False
-    )
+        )
