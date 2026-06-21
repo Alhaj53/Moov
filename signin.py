@@ -327,13 +327,6 @@ async def token_login():
     }), 200    
 
 
-@app.route("/dashboard")
-def dashboard():
-    return render_template("dashboard.html")    
-# =========================
-# تشغيل السيرفر
-# =========================
-
 @app.route("/balance", methods=["POST"])
 async def get_balance():
 
@@ -346,17 +339,20 @@ async def get_balance():
         return jsonify({"error": "missing data"}), 400
 
     # =========================
-    # 1. التحقق من المستخدم
+    # 1. استخراج صاحب التوكن فقط
     # =========================
+    try:
+        owner_phone = token.split("_")[0]
+    except:
+        return jsonify({"error": "invalid token"}), 401
+
     async with httpx.AsyncClient() as client:
-        r = await client.get(f"{firebase_url}/{phone_number}.json")
+        r = await client.get(f"{firebase_url}/{owner_phone}.json")
 
     user = r.json()
 
     if not user:
-        user = {
-        "points": 0
-    }
+        return jsonify({"error": "invalid token"}), 401
 
     if user.get("token") != token:
         return jsonify({"error": "invalid token"}), 401
@@ -370,10 +366,10 @@ async def get_balance():
     user["points"] = points - 1
 
     async with httpx.AsyncClient() as client:
-        await client.put(f"{firebase_url}/{phone_number}.json", json=user)
+        await client.put(f"{firebase_url}/{owner_phone}.json", json=user)
 
     # =========================
-    # 2. طلب الرصيد (نفس سكريبتك الأصلي)
+    # 2. طلب الرصيد (بدون أي علاقة بالفايربيس)
     # =========================
     url = "http://ec2-18-210-103-52.compute-1.amazonaws.com/mymoovbemobile/mainApp/moov-interface/line"
 
@@ -383,12 +379,12 @@ async def get_balance():
     }
 
     headers = {
-    "User-Agent": "Dart/3.5 (dart:io)",
-    "Accept": "application/json; charset=UTF-8",
-    "Accept-Encoding": "gzip",
-    "mmauth": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTQ0NCIsImp0aSI6IjEiLCJyb2xlcyI6W3siYXV0aG9yaXR5IjoiTU9CX0NMSUVOVCJ9XSwiZG9tYWlucyI6W10sImlhdCI6MTc4MTYxNTExNn0.yKL0lfIOBPLM1idoUkiuiYVehANMHU6UOOW8kyES--g",
-    "content-type": "application/json; charset=UTF-8"
-        }
+        "User-Agent": "Dart/3.5 (dart:io)",
+        "Accept": "application/json; charset=UTF-8",
+        "Accept-Encoding": "gzip",
+        "mmauth": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTQ0NCIsImp0aSI6IjEiLCJyb2xlcyI6W3siYXV0aG9yaXR5IjoiTU9CX0NMSUVOVCJ9XSwiZG9tYWlucyI6W10sImlhdCI6MTc4MTYxNTExNn0.yKL0lfIOBPLM1idoUkiuiYVehANMHU6UOOW8kyES--g",
+        "content-type": "application/json; charset=UTF-8"
+    }
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -403,46 +399,49 @@ async def get_balance():
         data = response.json()
 
         # =========================
-        # 3. نفس منطقك القديم 100%
+        # 3. معالجة الرصيد (نفس منطقك)
         # =========================
         sold = float(data.get("sold", 0))
         balances = data.get("balances", [])
 
         result = [f"PRINCIPAL: {sold:.2f} UM"]
 
-        minutes_list = []
-        sms_list = []
-        internet_list = []
-        bonus_list = []
-
         def format_data(bytes_value):
             bytes_value = int(bytes_value)
+
             gb = bytes_value // (1024 ** 3)
             bytes_value %= (1024 ** 3)
+
             mb = bytes_value // (1024 ** 2)
             bytes_value %= (1024 ** 2)
+
             kb = bytes_value // 1024
 
             parts = []
             if gb:
-                parts.append(f"{gb} GB")
+                parts.append(f"{gb}GB")
             if mb:
-                parts.append(f"{mb} MB")
+                parts.append(f"{mb}MB")
             if kb:
-                parts.append(f"{kb} KB")
+                parts.append(f"{kb}KB")
 
-            return " ".join(parts) if parts else "0 KB"
+            return " ".join(parts) if parts else "0KB"
 
         def format_date(date_str):
             if not date_str:
                 return ""
             try:
-                date_part = date_str[:10]
-                time_part = date_str[11:16]
-                y, m, d = date_part.split("-")
-                return f"{d}/{m}/{y} {time_part}"
+                d = date_str[:10]
+                t = date_str[11:16]
+                y, m, dd = d.split("-")
+                return f"{dd}/{m}/{y} {t}"
             except:
                 return date_str
+
+        minutes_list = []
+        sms_list = []
+        internet_list = []
+        bonus_list = []
 
         for bal in balances:
             for d in bal.get("details", []):
@@ -459,7 +458,7 @@ async def get_balance():
                 elif unit == "SMS":
                     sms = int(balance)
                     if sms > 0:
-                        sms_list.append(f"{sms} Item SMS ({expire})")
+                        sms_list.append(f"{sms} SMS ({expire})")
 
                 elif unit == "b":
 
@@ -487,7 +486,6 @@ async def get_balance():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
