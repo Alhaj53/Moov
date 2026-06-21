@@ -378,11 +378,18 @@ const box=document.getElementById("response");
 
 if(data.status==="success"){
 
-    box.style.display="block";
-    box.className="success";
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username);
 
-    box.innerHTML =
-        "<b>" + data.message + "</b>";
+    const box = document.getElementById("response");
+    box.style.display = "block";
+    box.className = "success";
+    box.innerHTML = "<b>" + data.message + "</b>";
+
+    setTimeout(() => {
+        window.location.href = "/dashboard";
+    }, 1000);
+}
 
 }else{
 
