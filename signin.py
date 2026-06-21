@@ -381,11 +381,12 @@ async def get_balance():
     }
 
     headers = {
-        "User-Agent": "Dart/3.5 (dart:io)",
-        "Accept": "application/json; charset=UTF-8",
-        "Accept-Encoding": "gzip",
-        "mmauth": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTQ0NCIsImp0aSI6IjEiLCJyb2xlcyI6W3siYXV0aG9yaXR5IjoiTU9CX0NMSUVOVCJ9XSwiZG9taW5zIjpbXSwi...": "..."
-    }
+    "User-Agent": "Dart/3.5 (dart:io)",
+    "Accept": "application/json; charset=UTF-8",
+    "Accept-Encoding": "gzip",
+    "mmauth": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxOTQ0NCIsImp0aSI6IjEiLCJyb2xlcyI6W3siYXV0aG9yaXR5IjoiTU9CX0NMSUVOVCJ9XSwiZG9tYWlucyI6W10sImlhdCI6MTc4MTYxNTExNn0.yKL0lfIOBPLM1idoUkiuiYVehANMHU6UOOW8kyES--g",
+    "content-type": "application/json; charset=UTF-8"
+        }
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
