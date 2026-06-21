@@ -568,8 +568,11 @@ async def get_name():
 
         parts = name.split()
 
-        if len(parts) >= 2:
-            name = " ".join(reversed(parts))
+        if len(parts) == 3:
+            name = f"{parts[1]} {parts[2]} {parts[0]}"
+
+        elif len(parts) == 2:
+            name = f"{parts[1]} {parts[0]}"
 
         return jsonify({
             "status": "success",
