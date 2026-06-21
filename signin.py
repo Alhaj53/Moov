@@ -254,7 +254,73 @@ async def login():
         "username": user.get("username"),
         "token": user.get("token")
     }), 200
-    
+@app.route("/api/token-login", methods=["POST"])
+async def token_login():
+
+    data = request.json or {}
+    token = str(data.get("token", "")).strip()
+
+    if not token:
+        return jsonify({
+            "status": "error",
+            "message": "التوكن مفقود"
+        }), 400
+
+    try:
+        phone = token.split("_")[0]
+
+        if not validate_phone(phone):
+            return jsonify({
+                "status": "error",
+                "message": "توكن غير صالح"
+            }), 401
+
+    except Exception:
+        return jsonify({
+            "status": "error",
+            "message": "توكن غير صالح"
+        }), 401
+
+    try:
+
+        async with httpx.AsyncClient(verify=True) as client:
+
+            response = await client.get(
+                f"{firebase_url}/{phone}.json"
+            )
+
+    except Exception:
+
+        return jsonify({
+            "status": "error",
+            "message": "تعذر الاتصال بقاعدة البيانات"
+        }), 500
+
+    if response.status_code != 200:
+        return jsonify({
+            "status": "error",
+            "message": "فشل جلب بيانات المستخدم"
+        }), 500
+
+    user = response.json()
+
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "المستخدم غير موجود"
+        }), 404
+
+    if user.get("token") != token:
+        return jsonify({
+            "status": "error",
+            "message": "التوكن غير صحيح"
+        }), 401
+
+    return jsonify({
+        "status": "success",
+        "message": f"مرحباً {user.get('username', 'مستخدم')}",
+        "user": user
+    }), 200    
 # =========================
 # تشغيل السيرفر
 # =========================
