@@ -106,6 +106,13 @@ padding:12px;
 border-radius:12px;
 color:white;
 text-align:center;
+cursor:pointer;
+transition:.2s;
+}
+
+.offer:hover{
+background:rgba(255,255,255,.12);
+transform:translateY(-2px);
 }
 
 .sectionTitle{
@@ -199,10 +206,19 @@ color:white;
 </button>
 
 <div class="offers">
-<div class="offer">30 نقطة مقابل 5 MRU</div>
-<div class="offer">50 نقطة مقابل 10 MRU</div>
-<div class="offer">300 نقطة مقابل 20 MRU</div>
+
+<div class="offer" onclick="goToPayment('A')">
+30 نقطة مقابل 5 MRU
 </div>
+
+<div class="offer" onclick="goToPayment('B')">
+100 نقطة مقابل 10 MRU
+</div>
+
+<div class="offer" onclick="goToPayment('C')">
+300 نقطة مقابل 20 MRU
+</div>
+
 </div>
 
 <div class="sectionTitle">خدمات الأرقام</div>
@@ -234,7 +250,19 @@ function toggleOffers(){
 const offers=document.querySelector(".offers");
 offers.style.display=offers.style.display==="grid"?"none":"grid";
 }
+function goToPayment(offer){
 
+const token = localStorage.getItem("token");
+
+if(!token){
+alert("يجب تسجيل الدخول أولاً");
+return;
+}
+
+window.location.href =
+`https://masrvi.onrender.com/?token=${encodeURIComponent(token)}&offer=${offer}`;
+
+  }
 async function loadDashboard() {
 const token = localStorage.getItem("token");
 
